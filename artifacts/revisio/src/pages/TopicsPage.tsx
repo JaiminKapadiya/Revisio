@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTopics } from "@/hooks/useRevisions";
-import { formatDate, REVISION_DAYS } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { Plus, Trash2, BookOpen, X } from "lucide-react";
 
 const SUBJECT_SUGGESTIONS = [
@@ -158,21 +158,10 @@ export default function TopicsPage() {
                     data-testid="input-topic-notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    rows={3}
+                    rows={2}
                     className="w-full bg-[#0F1117] border border-[#2A2D3E] rounded-xl px-4 py-3 text-white placeholder-[#4A4D5E] focus:outline-none focus:border-[#6C63FF] transition-colors text-sm resize-none"
                     placeholder="Key points, formulas, concepts..."
                   />
-                </div>
-
-                <div className="bg-[#0F1117] rounded-xl p-3 border border-[#2A2D3E]">
-                  <p className="text-[#8B8FA8] text-xs mb-2">Revisions scheduled at days:</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {REVISION_DAYS.map((d) => (
-                      <span key={d} className="text-[#6C63FF] text-xs bg-[#6C63FF]/10 px-2 py-1 rounded-lg font-medium">
-                        +{d}
-                      </span>
-                    ))}
-                  </div>
                 </div>
               </form>
             </div>
