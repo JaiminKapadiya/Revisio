@@ -1,42 +1,46 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
+import { Switch, Route } from "wouter";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import AuthPage from "@/pages/AuthPage";
+import TodayPage from "@/pages/TodayPage";
+import TopicsPage from "@/pages/TopicsPage";
+import CalendarPage from "@/pages/CalendarPage";
+import StatsPage from "@/pages/StatsPage";
+import Layout from "@/components/Layout";
 
-const queryClient = new QueryClient();
+function AppRoutes() {
+  const { user, loading } = useAuth();
 
-function Home() {
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Replit Agent is building...</h1>
-        <p className="mt-2 text-sm text-gray-600">Your app will appear here once it's ready.</p>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0F1117] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#6C63FF] border-t-transparent rounded-full animate-spin" />
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-function Router() {
+  if (!user) {
+    return <AuthPage />;
+  }
+
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route component={NotFound} />
-    </Switch>
+    <Layout>
+      <Switch>
+        <Route path="/" component={TodayPage} />
+        <Route path="/topics" component={TopicsPage} />
+        <Route path="/calendar" component={CalendarPage} />
+        <Route path="/stats" component={StatsPage} />
+        <Route>
+          <TodayPage />
+        </Route>
+      </Switch>
+    </Layout>
   );
 }
 
-function App() {
+export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
-
-export default App;
