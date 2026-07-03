@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTodayStr } from "@/lib/utils";
-import { Flame, CheckCircle, BookOpen, Target, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 type Revision = {
   id: string;
@@ -37,7 +37,6 @@ export default function StatsPage() {
   const done = revisions.filter((r) => r.status === "done");
   const totalScheduled = revisions.filter((r) => r.scheduled_date <= today).length;
   const accuracy = totalScheduled > 0 ? Math.round((done.length / totalScheduled) * 100) : 0;
-
   const streak = computeStreak(done);
   const heatmap = buildHeatmap(done);
 
@@ -56,21 +55,46 @@ export default function StatsPage() {
         <p className="text-[#8B8FA8] text-sm mt-1">Your revision performance</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <StatCard icon={Flame} label="Current Streak" value={`${streak}d`} color="#FF6B6B" />
-        <StatCard icon={CheckCircle} label="Total Done" value={String(done.length)} color="#4ADE80" />
-        <StatCard icon={Target} label="Accuracy" value={`${accuracy}%`} color="#6C63FF" />
-        <StatCard icon={BookOpen} label="Scheduled" value={String(totalScheduled)} color="#FFE66D" />
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <StatCard
+          label="Current Streak"
+          value={streak}
+          unit={streak === 1 ? "day" : "days"}
+          color="#FF6B6B"
+          testId="stat-current-streak"
+        />
+        <StatCard
+          label="Revisions Done"
+          value={done.length}
+          color="#4ADE80"
+          testId="stat-revisions-done"
+        />
+        <StatCard
+          label="Accuracy"
+          value={accuracy}
+          unit="%"
+          unitInline
+          color="#6C63FF"
+          testId="stat-accuracy"
+        />
+        <StatCard
+          label="Scheduled"
+          value={totalScheduled}
+          color="#FFE66D"
+          testId="stat-scheduled"
+        />
       </div>
 
       <div className="bg-[#1A1D27] rounded-2xl border border-[#2A2D3E] p-5 mb-4">
-        <p className="text-[#8B8FA8] text-xs font-medium uppercase tracking-wider mb-4">Activity — Last 12 Weeks</p>
+        <p className="text-[#8B8FA8] text-xs font-medium uppercase tracking-wider mb-4">
+          Activity — Last 12 Weeks
+        </p>
         <Heatmap data={heatmap} />
       </div>
 
       {done.length === 0 && (
-        <div className="text-center py-6">
-          <p className="text-[#8B8FA8] text-sm">Complete your first revision to see stats here</p>
+        <div className="text-center py-4">
+          <p className="text-[#4A4D5E] text-sm">Complete your first revision to see stats here</p>
         </div>
       )}
 
@@ -90,26 +114,41 @@ export default function StatsPage() {
 }
 
 function StatCard({
-  icon: Icon,
   label,
   value,
+  unit,
+  unitInline = false,
   color,
+  testId,
 }: {
-  icon: React.ElementType;
   label: string;
-  value: string;
+  value: number;
+  unit?: string;
+  unitInline?: boolean;
   color: string;
+  testId: string;
 }) {
   return (
     <div
-      data-testid={`stat-${label.toLowerCase().replace(/ /g, "-")}`}
+      data-testid={testId}
       className="bg-[#1A1D27] rounded-2xl border border-[#2A2D3E] p-4"
     >
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: color + "22" }}>
-        <Icon size={18} style={{ color }} />
-      </div>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-[#8B8FA8] text-xs mt-1">{label}</p>
+      <div
+        className="w-1.5 h-1.5 rounded-full mb-4"
+        style={{ backgroundColor: color }}
+      />
+      {unitInline ? (
+        <p className="text-4xl font-bold text-white leading-none mb-1">
+          {value}
+          <span className="text-2xl" style={{ color }}>{unit}</span>
+        </p>
+      ) : (
+        <p className="text-4xl font-bold text-white leading-none mb-1">{value}</p>
+      )}
+      {unit && !unitInline && (
+        <p className="text-sm font-medium mb-1" style={{ color }}>{unit}</p>
+      )}
+      <p className="text-[#8B8FA8] text-xs">{label}</p>
     </div>
   );
 }
@@ -124,7 +163,7 @@ function computeStreak(done: Revision[]): number {
   const cursor = new Date(today + "T00:00:00");
 
   while (true) {
-    const dateStr = cursor.toISOString().split("T")[0];
+    const dateStr = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
     if (doneDates.has(dateStr)) {
       streak++;
       cursor.setDate(cursor.getDate() - 1);
@@ -156,17 +195,20 @@ function Heatmap({ data }: { data: Record<string, number> }) {
   for (let i = 83; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    days.push(d.toISOString().split("T")[0]);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    days.push(`${y}-${m}-${day}`);
   }
 
   const maxCount = Math.max(1, ...Object.values(data));
 
   const intensityColor = (count: number) => {
-    if (!count) return "#1A1D27";
+    if (!count) return "#252837";
     const intensity = count / maxCount;
-    if (intensity < 0.25) return "#6C63FF33";
-    if (intensity < 0.5) return "#6C63FF66";
-    if (intensity < 0.75) return "#6C63FF99";
+    if (intensity < 0.25) return "#6C63FF44";
+    if (intensity < 0.5) return "#6C63FF77";
+    if (intensity < 0.75) return "#6C63FFAA";
     return "#6C63FF";
   };
 
@@ -176,7 +218,7 @@ function Heatmap({ data }: { data: Record<string, number> }) {
   }
 
   return (
-    <div className="flex gap-1 flex-wrap">
+    <div className="flex gap-1">
       {weeks.map((week, wi) => (
         <div key={wi} className="flex flex-col gap-1">
           {week.map((day) => {
