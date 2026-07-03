@@ -150,6 +150,9 @@ export default function TopicsPage() {
                       </button>
                     ))}
                   </div>
+                  <p className="text-[#4A4D5E] text-xs mt-2.5">
+                    Auto-scheduled at days 1 · 3 · 7 · 15 · 30 · 60
+                  </p>
                 </div>
 
                 <div>
