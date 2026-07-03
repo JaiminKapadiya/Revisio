@@ -15,22 +15,30 @@ type Revision = {
 export default function StatsPage() {
   const { user, signOut } = useAuth();
   const [revisions, setRevisions] = useState<Revision[]>([]);
+  const [topicCount, setTopicCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchRevisions = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("revisions")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("scheduled_date", { ascending: false });
-    setRevisions((data ?? []) as Revision[]);
+    const [{ data: revData }, { count }] = await Promise.all([
+      supabase
+        .from("revisions")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("scheduled_date", { ascending: false }),
+      supabase
+        .from("topics")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id),
+    ]);
+    setRevisions((revData ?? []) as Revision[]);
+    setTopicCount(count ?? 0);
     setLoading(false);
   }, [user]);
 
   useEffect(() => {
-    fetchRevisions();
-  }, [fetchRevisions]);
+    fetchData();
+  }, [fetchData]);
 
   const today = getTodayStr();
 
@@ -78,10 +86,10 @@ export default function StatsPage() {
           testId="stat-accuracy"
         />
         <StatCard
-          label="Scheduled"
-          value={totalScheduled}
+          label="Scheduled Topics"
+          value={topicCount}
           color="#FFE66D"
-          testId="stat-scheduled"
+          testId="stat-scheduled-topics"
         />
       </div>
 
@@ -108,6 +116,16 @@ export default function StatsPage() {
           <LogOut size={16} />
           Sign Out
         </button>
+
+        <p className="text-[#4A4D5E] text-xs text-center mt-6">
+          Need help? Contact us at{" "}
+          <a
+            href="mailto:revisio.support@gmail.com"
+            className="text-[#6C6880] hover:text-[#8B8FA8] underline transition-colors"
+          >
+            revisio.support@gmail.com
+          </a>
+        </p>
       </div>
     </div>
   );
