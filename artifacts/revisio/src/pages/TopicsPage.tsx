@@ -85,23 +85,31 @@ export default function TopicsPage() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/70 flex items-end justify-center z-50 px-4 pb-4">
-          <div className="bg-[#1A1D27] rounded-2xl w-full max-w-lg border border-[#2A2D3E] flex flex-col max-h-[90vh]">
-            {/* Fixed header */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 flex-shrink-0">
+        <div className="fixed inset-0 bg-black/70 flex items-end justify-center z-50">
+          {/*
+            Modal sits at the bottom of the screen.
+            max-h leaves the bottom nav (~68px) plus 8px breathing room visible above it.
+            We use 100svh (small viewport height) so it respects the browser chrome on mobile.
+          */}
+          <div
+            className="bg-[#1A1D27] rounded-t-2xl w-full max-w-lg border border-[#2A2D3E] border-b-0 flex flex-col"
+            style={{ maxHeight: "calc(100svh - 76px)" }}
+          >
+            {/* ── Sticky header ── */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
               <h3 className="text-white font-semibold text-lg">New Topic</h3>
               <button
                 data-testid="button-close-form"
                 onClick={closeForm}
-                className="text-[#8B8FA8] hover:text-white"
+                className="text-[#8B8FA8] hover:text-white p-1"
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* Scrollable body */}
-            <div className="overflow-y-auto flex-1 px-6 pb-6">
-              <form onSubmit={handleAdd} className="space-y-4">
+            {/* ── Scrollable fields ── */}
+            <div className="overflow-y-auto flex-1 px-5">
+              <form id="add-topic-form" onSubmit={handleAdd} className="space-y-4 pb-2">
                 <div>
                   <label className="block text-sm text-[#8B8FA8] mb-1.5">Topic Title</label>
                   <input
@@ -158,7 +166,7 @@ export default function TopicsPage() {
 
                 <div className="bg-[#0F1117] rounded-xl p-3 border border-[#2A2D3E]">
                   <p className="text-[#8B8FA8] text-xs mb-2">Revisions scheduled at days:</p>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     {REVISION_DAYS.map((d) => (
                       <span key={d} className="text-[#6C63FF] text-xs bg-[#6C63FF]/10 px-2 py-1 rounded-lg font-medium">
                         +{d}
@@ -166,18 +174,21 @@ export default function TopicsPage() {
                     ))}
                   </div>
                 </div>
-
-                {error && <p className="text-red-400 text-sm">{error}</p>}
-
-                <button
-                  data-testid="button-submit-topic"
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full bg-[#6C63FF] hover:bg-[#5A52E0] text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
-                >
-                  {submitting ? "Adding..." : "Add Topic"}
-                </button>
               </form>
+            </div>
+
+            {/* ── Sticky footer — always visible ── */}
+            <div className="flex-shrink-0 px-5 pt-3 pb-5 border-t border-[#2A2D3E] bg-[#1A1D27]">
+              {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+              <button
+                data-testid="button-submit-topic"
+                type="submit"
+                form="add-topic-form"
+                disabled={submitting}
+                className="w-full bg-[#6C63FF] hover:bg-[#5A52E0] text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
+              >
+                {submitting ? "Adding..." : "Add Topic"}
+              </button>
             </div>
           </div>
         </div>
