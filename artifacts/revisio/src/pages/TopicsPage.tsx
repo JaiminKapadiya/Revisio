@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTopics } from "@/hooks/useRevisions";
 import { formatDate } from "@/lib/utils";
 import { Plus, Trash2, BookOpen, X } from "lucide-react";
@@ -51,6 +51,18 @@ export default function TopicsPage() {
     await deleteTopic(id);
   };
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (showForm) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showForm]);
+
   const closeForm = () => {
     setShowForm(false);
     setTitle("");
@@ -85,31 +97,31 @@ export default function TopicsPage() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/70 flex items-end justify-center z-50">
-          {/*
-            Modal sits at the bottom of the screen.
-            max-h leaves the bottom nav (~68px) plus 8px breathing room visible above it.
-            We use 100svh (small viewport height) so it respects the browser chrome on mobile.
-          */}
+        /* Backdrop — touch-none prevents any scroll events reaching the page */
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4"
+          onTouchMove={(e) => e.preventDefault()}
+        >
+          {/* Modal card — fixed 85vh max, flex column so footer never moves */}
           <div
-            className="bg-[#1A1D27] rounded-t-2xl w-full max-w-lg border border-[#2A2D3E] border-b-0 flex flex-col"
-            style={{ maxHeight: "calc(100svh - 76px)" }}
+            className="bg-[#1A1D27] rounded-2xl w-full max-w-sm border border-[#2A2D3E] flex flex-col"
+            style={{ maxHeight: "85vh" }}
           >
-            {/* ── Sticky header ── */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
+            {/* ── Header (never scrolls) ── */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 flex-shrink-0">
               <h3 className="text-white font-semibold text-lg">New Topic</h3>
               <button
                 data-testid="button-close-form"
                 onClick={closeForm}
-                className="text-[#8B8FA8] hover:text-white p-1"
+                className="text-[#8B8FA8] hover:text-white p-1 -mr-1"
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* ── Scrollable fields ── */}
+            {/* ── Scrollable fields (only this region scrolls) ── */}
             <div className="overflow-y-auto flex-1 px-5">
-              <form id="add-topic-form" onSubmit={handleAdd} className="space-y-4 pb-2">
+              <form id="add-topic-form" onSubmit={handleAdd} className="space-y-4 pb-1">
                 <div>
                   <label className="block text-sm text-[#8B8FA8] mb-1.5">Topic Title</label>
                   <input
@@ -133,14 +145,14 @@ export default function TopicsPage() {
                     className="w-full bg-[#0F1117] border border-[#2A2D3E] rounded-xl px-4 py-3 text-white placeholder-[#4A4D5E] focus:outline-none focus:border-[#6C63FF] transition-colors text-sm"
                     placeholder="Type any subject…"
                   />
-                  <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-wrap gap-1.5 mt-2">
                     {SUBJECT_SUGGESTIONS.map((s) => (
                       <button
                         key={s}
                         type="button"
                         data-testid={`subject-suggestion-${s}`}
                         onClick={() => setSubject(s)}
-                        className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ${
                           subject === s
                             ? "border-[#6C63FF] text-[#6C63FF] bg-[#6C63FF]/10"
                             : "border-[#2A2D3E] text-[#8B8FA8] hover:border-[#4A4D5E] hover:text-white"
@@ -150,7 +162,7 @@ export default function TopicsPage() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-[#4A4D5E] text-xs mt-2.5">
+                  <p className="text-[#4A4D5E] text-xs mt-2">
                     Auto-scheduled at days 1 · 3 · 7 · 15 · 30 · 60
                   </p>
                 </div>
@@ -169,8 +181,8 @@ export default function TopicsPage() {
               </form>
             </div>
 
-            {/* ── Sticky footer — always visible ── */}
-            <div className="flex-shrink-0 px-5 pt-3 pb-5 border-t border-[#2A2D3E] bg-[#1A1D27]">
+            {/* ── Footer — always visible, never scrolls ── */}
+            <div className="flex-shrink-0 px-5 pt-3 pb-5 border-t border-[#2A2D3E]">
               {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
               <button
                 data-testid="button-submit-topic"
