@@ -1,6 +1,5 @@
 import { useLocation, Link } from "wouter";
-import { useAuth } from "@/contexts/AuthContext";
-import { Home, BookOpen, Calendar, BarChart2, LogOut } from "lucide-react";
+import { Home, BookOpen, Calendar, BarChart2 } from "lucide-react";
 
 const navItems = [
   { href: "/", icon: Home, label: "Today" },
@@ -11,19 +10,11 @@ const navItems = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const { signOut } = useAuth();
 
   return (
     <div className="min-h-screen bg-[#0F1117] flex flex-col max-w-lg mx-auto relative">
-      <header className="flex items-center justify-between px-5 pt-12 pb-4">
+      <header className="px-5 pt-12 pb-4">
         <h1 className="text-xl font-bold text-white tracking-tight">Revisio</h1>
-        <button
-          data-testid="button-signout"
-          onClick={signOut}
-          className="p-2 rounded-xl text-[#8B8FA8] hover:text-white hover:bg-[#1A1D27] transition-all"
-        >
-          <LogOut size={18} />
-        </button>
       </header>
 
       <main className="flex-1 px-4 pb-28 overflow-y-auto">

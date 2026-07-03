@@ -3,28 +3,27 @@ import { useTopics } from "@/hooks/useRevisions";
 import { formatDate, REVISION_DAYS } from "@/lib/utils";
 import { Plus, Trash2, BookOpen, X } from "lucide-react";
 
-const SUBJECTS = [
-  "Math", "Science", "History", "Language", "Programming",
-  "Literature", "Art", "Music", "Other"
+const SUBJECT_SUGGESTIONS = [
+  "Anatomy", "Physiology", "Biochemistry", "Physics",
+  "Chemistry", "Mathematics", "History", "Other"
 ];
 
-const subjectColors: Record<string, string> = {
-  Math: "#FF6B6B",
-  Science: "#4ECDC4",
-  History: "#FFE66D",
-  Language: "#A29BFE",
-  Programming: "#6C63FF",
-  Literature: "#FD79A8",
-  Art: "#FDCB6E",
-  Music: "#00CEC9",
-  Other: "#8B8FA8",
+const subjectColor = (subject: string): string => {
+  const palette = [
+    "#FF6B6B", "#4ECDC4", "#FFE66D", "#A29BFE",
+    "#6C63FF", "#FD79A8", "#FDCB6E", "#00CEC9",
+    "#55EFC4", "#74B9FF", "#E17055", "#DFE6E9",
+  ];
+  let hash = 0;
+  for (let i = 0; i < subject.length; i++) hash = subject.charCodeAt(i) + ((hash << 5) - hash);
+  return palette[Math.abs(hash) % palette.length];
 };
 
 export default function TopicsPage() {
   const { topics, loading, addTopic, deleteTopic } = useTopics();
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
-  const [subject, setSubject] = useState("Math");
+  const [subject, setSubject] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -32,12 +31,13 @@ export default function TopicsPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    const finalSubject = subject.trim() || "Other";
     setSubmitting(true);
     setError("");
     try {
-      await addTopic(title.trim(), subject, notes.trim());
+      await addTopic(title.trim(), finalSubject, notes.trim());
       setTitle("");
-      setSubject("Math");
+      setSubject("");
       setNotes("");
       setShowForm(false);
     } catch {
@@ -49,6 +49,14 @@ export default function TopicsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this topic and all its revisions?")) return;
     await deleteTopic(id);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setTitle("");
+    setSubject("");
+    setNotes("");
+    setError("");
   };
 
   if (loading) {
@@ -77,88 +85,100 @@ export default function TopicsPage() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/60 flex items-end justify-center z-50 px-4 pb-4">
-          <div className="bg-[#1A1D27] rounded-2xl p-6 w-full max-w-lg border border-[#2A2D3E]">
-            <div className="flex items-center justify-between mb-5">
+        <div className="fixed inset-0 bg-black/70 flex items-end justify-center z-50 px-4 pb-4">
+          <div className="bg-[#1A1D27] rounded-2xl w-full max-w-lg border border-[#2A2D3E] flex flex-col max-h-[90vh]">
+            {/* Fixed header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 flex-shrink-0">
               <h3 className="text-white font-semibold text-lg">New Topic</h3>
               <button
                 data-testid="button-close-form"
-                onClick={() => setShowForm(false)}
+                onClick={closeForm}
                 className="text-[#8B8FA8] hover:text-white"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleAdd} className="space-y-4">
-              <div>
-                <label className="block text-sm text-[#8B8FA8] mb-1.5">Topic Title</label>
-                <input
-                  data-testid="input-topic-title"
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                  className="w-full bg-[#0F1117] border border-[#2A2D3E] rounded-xl px-4 py-3 text-white placeholder-[#4A4D5E] focus:outline-none focus:border-[#6C63FF] transition-colors text-sm"
-                  placeholder="e.g. Quadratic Equations"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-[#8B8FA8] mb-1.5">Subject</label>
-                <div className="flex flex-wrap gap-2">
-                  {SUBJECTS.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      data-testid={`subject-${s}`}
-                      onClick={() => setSubject(s)}
-                      className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all border ${
-                        subject === s
-                          ? "border-[#6C63FF] text-[#6C63FF] bg-[#6C63FF]/10"
-                          : "border-[#2A2D3E] text-[#8B8FA8] hover:border-[#4A4D5E]"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
+            {/* Scrollable body */}
+            <div className="overflow-y-auto flex-1 px-6 pb-6">
+              <form onSubmit={handleAdd} className="space-y-4">
+                <div>
+                  <label className="block text-sm text-[#8B8FA8] mb-1.5">Topic Title</label>
+                  <input
+                    data-testid="input-topic-title"
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    className="w-full bg-[#0F1117] border border-[#2A2D3E] rounded-xl px-4 py-3 text-white placeholder-[#4A4D5E] focus:outline-none focus:border-[#6C63FF] transition-colors text-sm"
+                    placeholder="e.g. Cardiac Cycle"
+                  />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm text-[#8B8FA8] mb-1.5">Notes (optional)</label>
-                <textarea
-                  data-testid="input-topic-notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                  className="w-full bg-[#0F1117] border border-[#2A2D3E] rounded-xl px-4 py-3 text-white placeholder-[#4A4D5E] focus:outline-none focus:border-[#6C63FF] transition-colors text-sm resize-none"
-                  placeholder="Key points, formulas, concepts..."
-                />
-              </div>
-
-              <div className="bg-[#0F1117] rounded-xl p-3 border border-[#2A2D3E]">
-                <p className="text-[#8B8FA8] text-xs mb-2">Revisions scheduled at days:</p>
-                <div className="flex gap-2">
-                  {REVISION_DAYS.map((d) => (
-                    <span key={d} className="text-[#6C63FF] text-xs bg-[#6C63FF]/10 px-2 py-1 rounded-lg font-medium">
-                      +{d}
-                    </span>
-                  ))}
+                <div>
+                  <label className="block text-sm text-[#8B8FA8] mb-1.5">Subject</label>
+                  <input
+                    data-testid="input-subject"
+                    type="text"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="w-full bg-[#0F1117] border border-[#2A2D3E] rounded-xl px-4 py-3 text-white placeholder-[#4A4D5E] focus:outline-none focus:border-[#6C63FF] transition-colors text-sm"
+                    placeholder="Type any subject…"
+                  />
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {SUBJECT_SUGGESTIONS.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        data-testid={`subject-suggestion-${s}`}
+                        onClick={() => setSubject(s)}
+                        className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
+                          subject === s
+                            ? "border-[#6C63FF] text-[#6C63FF] bg-[#6C63FF]/10"
+                            : "border-[#2A2D3E] text-[#8B8FA8] hover:border-[#4A4D5E] hover:text-white"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {error && <p className="text-red-400 text-sm">{error}</p>}
+                <div>
+                  <label className="block text-sm text-[#8B8FA8] mb-1.5">Notes (optional)</label>
+                  <textarea
+                    data-testid="input-topic-notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                    className="w-full bg-[#0F1117] border border-[#2A2D3E] rounded-xl px-4 py-3 text-white placeholder-[#4A4D5E] focus:outline-none focus:border-[#6C63FF] transition-colors text-sm resize-none"
+                    placeholder="Key points, formulas, concepts..."
+                  />
+                </div>
 
-              <button
-                data-testid="button-submit-topic"
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-[#6C63FF] hover:bg-[#5A52E0] text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
-              >
-                {submitting ? "Adding..." : "Add Topic"}
-              </button>
-            </form>
+                <div className="bg-[#0F1117] rounded-xl p-3 border border-[#2A2D3E]">
+                  <p className="text-[#8B8FA8] text-xs mb-2">Revisions scheduled at days:</p>
+                  <div className="flex gap-2">
+                    {REVISION_DAYS.map((d) => (
+                      <span key={d} className="text-[#6C63FF] text-xs bg-[#6C63FF]/10 px-2 py-1 rounded-lg font-medium">
+                        +{d}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {error && <p className="text-red-400 text-sm">{error}</p>}
+
+                <button
+                  data-testid="button-submit-topic"
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-[#6C63FF] hover:bg-[#5A52E0] text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {submitting ? "Adding..." : "Add Topic"}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}
@@ -174,7 +194,7 @@ export default function TopicsPage() {
       ) : (
         <div className="space-y-3">
           {topics.map((topic) => {
-            const color = subjectColors[topic.subject] ?? "#8B8FA8";
+            const color = subjectColor(topic.subject);
             return (
               <div
                 key={topic.id}

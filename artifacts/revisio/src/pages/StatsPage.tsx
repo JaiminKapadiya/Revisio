@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTodayStr } from "@/lib/utils";
-import { Flame, CheckCircle, BookOpen, Target } from "lucide-react";
+import { Flame, CheckCircle, BookOpen, Target, LogOut } from "lucide-react";
 
 type Revision = {
   id: string;
@@ -13,7 +13,7 @@ type Revision = {
 };
 
 export default function StatsPage() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,7 +39,6 @@ export default function StatsPage() {
   const accuracy = totalScheduled > 0 ? Math.round((done.length / totalScheduled) * 100) : 0;
 
   const streak = computeStreak(done);
-
   const heatmap = buildHeatmap(done);
 
   if (loading) {
@@ -70,10 +69,22 @@ export default function StatsPage() {
       </div>
 
       {done.length === 0 && (
-        <div className="text-center py-8">
+        <div className="text-center py-6">
           <p className="text-[#8B8FA8] text-sm">Complete your first revision to see stats here</p>
         </div>
       )}
+
+      <div className="mt-8 pt-6 border-t border-[#2A2D3E]">
+        <p className="text-[#4A4D5E] text-xs text-center mb-4">{user?.email}</p>
+        <button
+          data-testid="button-signout"
+          onClick={signOut}
+          className="w-full flex items-center justify-center gap-2 bg-[#1A1D27] hover:bg-[#252837] border border-[#2A2D3E] text-[#8B8FA8] hover:text-white text-sm font-medium py-3 rounded-xl transition-all"
+        >
+          <LogOut size={16} />
+          Sign Out
+        </button>
+      </div>
     </div>
   );
 }
@@ -110,7 +121,7 @@ function computeStreak(done: Revision[]): number {
   );
 
   let streak = 0;
-  let cursor = new Date(today + "T00:00:00");
+  const cursor = new Date(today + "T00:00:00");
 
   while (true) {
     const dateStr = cursor.toISOString().split("T")[0];
