@@ -1,4 +1,5 @@
 import { Switch, Route } from "wouter";
+import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import AuthPage from "@/pages/AuthPage";
 import TodayPage from "@/pages/TodayPage";
@@ -41,6 +42,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AppRoutes />
+      <Analytics />
     </AuthProvider>
   );
 }
