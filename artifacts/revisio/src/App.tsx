@@ -6,6 +6,7 @@ import TopicsPage from "@/pages/TopicsPage";
 import CalendarPage from "@/pages/CalendarPage";
 import StatsPage from "@/pages/StatsPage";
 import Layout from "@/components/Layout";
+import { Analytics } from "@vercel/analytics/react";
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -41,6 +42,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AppRoutes />
+      <Analytics />
     </AuthProvider>
   );
 }
